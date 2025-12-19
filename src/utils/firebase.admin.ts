@@ -6,7 +6,7 @@ const serviceAccount: ServiceAccount = {
   privateKey: process.env.FIREBASE_PRIVATE_KEY,
 };
 
-const databaseUrl = "https://lddiot-thijmen.firebasestorage.app";
+const databaseUrl = process.env.FIREBASE_DATABASE_URL;
 
 function getFirebaseAdminApp() {
   if (!admin.apps.length) {
