@@ -40,7 +40,7 @@ export default function DeviceForm({ userId }: DeviceFormProps) {
         const res = await fetch("api/calendars/list");
         if (res.ok) {
           const data = await res.json();
-          setCalendars(data.calendars || []);
+          setCalendars(data || []);
         }
       } catch (error) {
         console.error("Error fetching calendars:", error);
@@ -116,7 +116,7 @@ export default function DeviceForm({ userId }: DeviceFormProps) {
             disabled={loading}
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-400"
           >
-            {loading ? "Saving..." : "Link Device"}
+            {loading ? "Saving..." : "Save settings"}
           </button>
         </div>
 

@@ -1,7 +1,6 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "../../auth/[...nextauth]/route";
 import { NextResponse } from "next/server";
-import { db } from "@/src/utils/firebase.admin";
 import { getDbAuth, getGoogleOauth2 } from "@/src/utils/auth";
 import { google } from "googleapis";
 import { Calendar } from "@/src/types/Calendar";

@@ -1,7 +1,7 @@
 import { db } from "@/src/utils/firebase.admin";
 import { NextRequest, NextResponse } from "next/server";
 import { google } from "googleapis";
-import { getDbAuth } from "@/src/utils/auth";
+import { getDbAuth, getGoogleOauth2 } from "@/src/utils/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -43,12 +43,10 @@ export async function GET(request: NextRequest) {
     return new Response("No refresh token found", { status: 404 });
   }
 
-  const oauth2Client = new google.auth.OAuth2(
-    process.env.GOOGLE_CLIENT_ID,
-    process.env.GOOGLE_CLIENT_SECRET
+  const oauth2Client = await getGoogleOauth2(
+    accountData.access_token,
+    refreshToken
   );
-
-  oauth2Client.setCredentials({ refresh_token: refreshToken });
 
   const targetCalendarId = userData.calendarId || "primary";
 
