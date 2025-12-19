@@ -1,5 +1,6 @@
 "use client";
 
+import { Calendar } from "@/src/types/Calendar";
 import { db } from "@/src/utils/firebase.browser";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { useEffect, useState } from "react";
@@ -10,20 +11,43 @@ interface DeviceFormProps {
 
 export default function DeviceForm({ userId }: DeviceFormProps) {
   const [deviceId, setDeviceId] = useState("");
+  const [calendarId, setCalendarId] = useState("primary");
+  const [calendars, setCalendars] = useState<Calendar[]>([]);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<string>("");
 
   useEffect(() => {
     async function loadData() {
       if (!userId) return;
+
       const userRef = doc(db, "users", userId);
       const snap = await getDoc(userRef);
       if (snap.exists() && snap.data().deviceId) {
-        setDeviceId(snap.data().deviceId);
+        const data = snap.data();
+        if (data.deviceId) setDeviceId(data.deviceId);
+        if (data.calendarId) setCalendarId(data.calendarId);
       }
     }
 
     loadData();
+  }, [userId]);
+
+  useEffect(() => {
+    async function fetchCalendars() {
+      if (!userId) return;
+
+      try {
+        const res = await fetch("api/calendars/list");
+        if (res.ok) {
+          const data = await res.json();
+          setCalendars(data.calendars || []);
+        }
+      } catch (error) {
+        console.error("Error fetching calendars:", error);
+      }
+    }
+
+    fetchCalendars();
   }, [userId]);
 
   const handleSave = async (deviceId: string) => {
@@ -32,7 +56,10 @@ export default function DeviceForm({ userId }: DeviceFormProps) {
 
     try {
       const userRef = doc(db, "users", userId);
-      await updateDoc(userRef, { deviceId: deviceId.trim() });
+      await updateDoc(userRef, {
+        deviceId: deviceId.trim(),
+        calendarId: calendarId,
+      });
       setStatus("Device ID saved successfully!");
     } catch (error) {
       console.error("Error saving device ID: ", error);
@@ -63,6 +90,26 @@ export default function DeviceForm({ userId }: DeviceFormProps) {
             You can find this ID on the first device boot.
           </p>
         </div>
+
+        {/* Calendar Selection Dropdown */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Select Calendar
+          </label>
+          <select
+            value={calendarId}
+            onChange={(e) => setCalendarId(e.target.value)}
+            className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none bg-white"
+          >
+            <option value="primary">Primary (Default)</option>
+            {calendars.map((cal) => (
+              <option key={cal.id} value={cal.id}>
+                {cal.summary}
+              </option>
+            ))}
+          </select>
+        </div>
+
         <div>
           <button
             onClick={() => handleSave(deviceId)}

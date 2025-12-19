@@ -1,6 +1,7 @@
 import { db } from "@/src/utils/firebase.admin";
 import { NextRequest, NextResponse } from "next/server";
 import { google } from "googleapis";
+import { getDbAuth } from "@/src/utils/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -25,22 +26,16 @@ export async function GET(request: NextRequest) {
     return new Response("Device not found", { status: 404 });
   }
 
+  const userData = userSnap.docs[0].data();
   const userId = userSnap.docs[0].id;
   console.log(`Device ID ${deviceId} is registered to user ID: ${userId}`);
 
-  const accountSnap = await db
-    .collection("accounts")
-    .where("userId", "==", userId)
-    .where("provider", "==", "google")
-    .limit(1)
-    .get();
-
-  if (accountSnap.empty) {
-    console.log(`No Google account linked for user ID: ${userId}`);
+  const accountData = await getDbAuth(userId, "google");
+  if (!accountData) {
+    console.log(`No linked Google account for user ID: ${userId}`);
     return new Response("No linked Google account", { status: 404 });
   }
 
-  const accountData = accountSnap.docs[0].data();
   const refreshToken = accountData.refresh_token;
 
   if (!refreshToken) {
@@ -55,11 +50,13 @@ export async function GET(request: NextRequest) {
 
   oauth2Client.setCredentials({ refresh_token: refreshToken });
 
+  const targetCalendarId = userData.calendarId || "primary";
+
   try {
     const calendar = google.calendar({ version: "v3", auth: oauth2Client });
 
     const response = await calendar.events.list({
-      calendarId: "primary",
+      calendarId: targetCalendarId,
       timeMin: new Date().toISOString(),
       maxResults: 3,
       singleEvents: true,
