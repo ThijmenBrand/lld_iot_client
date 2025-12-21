@@ -65,21 +65,16 @@ export async function GET(request: NextRequest) {
     console.log(`Fetched ${events.length} events for device ID: ${deviceId}`);
 
     const lines = events.map((event) => {
-      const start = event.start?.dateTime || event.start?.date;
+      const start = event.start?.dateTime || event.start?.date || "";
       const summary = event.summary || "No Title";
 
-      let timeStr = "All day";
-      if (start && start.includes("T")) {
-        const dateObj = new Date(start);
+      const dateObj = new Date(start);
 
-        timeStr = dateObj.toLocaleTimeString("nl-NL", {
-          day: "numeric",
-          month: "short",
-          hour: "2-digit",
-          minute: "2-digit",
-          timeZone: "Europe/Amsterdam", // Hardcoded for now, or fetch from user settings later
-        });
-      }
+      const timeStr = dateObj.toLocaleTimeString("nl-NL", {
+        day: "numeric",
+        month: "short",
+        timeZone: "Europe/Amsterdam", // Hardcoded for now, or fetch from user settings later
+      });
 
       return `${timeStr} ${summary}`;
     });
