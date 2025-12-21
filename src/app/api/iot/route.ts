@@ -70,10 +70,10 @@ export async function GET(request: NextRequest) {
 
       const dateObj = new Date(start);
 
-      const timeStr = dateObj.toLocaleTimeString("nl-NL", {
+      const timeStr = dateObj.toLocaleDateString("nl-NL", {
         day: "numeric",
         month: "short",
-        timeZone: "Europe/Amsterdam", // Hardcoded for now, or fetch from user settings later
+        timeZone: "Europe/Amsterdam",
       });
 
       return `${timeStr} ${summary}`;
