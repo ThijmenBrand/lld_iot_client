@@ -83,7 +83,7 @@ export default function DeviceForm({ userId }: DeviceFormProps) {
             id="deviceId"
             value={deviceId}
             onChange={(e) => setDeviceId(e.target.value)}
-            className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full text-black border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="Enter your Device ID"
             required
           />
@@ -100,7 +100,7 @@ export default function DeviceForm({ userId }: DeviceFormProps) {
           <select
             value={calendarId}
             onChange={(e) => setCalendarId(e.target.value)}
-            className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none bg-white"
+            className="w-full p-2 text-black border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none bg-white"
           >
             <option value="primary">Primary (Default)</option>
             {calendars.map((cal) => (
