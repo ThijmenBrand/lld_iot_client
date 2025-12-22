@@ -42,6 +42,10 @@ export async function POST(request: Request) {
   const body = await request.json();
   const { deviceId, calendarId } = body;
 
+  if (!deviceIdUnique(deviceId, session.user.id)) {
+    return new NextResponse("Device ID already in use", { status: 400 });
+  }
+
   try {
     await db
       .collection("users")
@@ -60,4 +64,24 @@ export async function POST(request: Request) {
     console.error("Error updating user data:", error);
     return new NextResponse("Internal Server Error", { status: 500 });
   }
+}
+
+async function deviceIdUnique(
+  deviceId: string,
+  userId: string
+): Promise<boolean> {
+  // check if deviceId is not configured by someone else
+  const userWithDeviceId = await db
+    .collection("users")
+    .where("deviceId", "==", deviceId)
+    .get();
+
+  if (!userWithDeviceId.empty) {
+    const doc = userWithDeviceId.docs[0];
+    if (doc.id !== userId) {
+      return false;
+    }
+  }
+
+  return true;
 }
