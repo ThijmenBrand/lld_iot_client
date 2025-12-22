@@ -47,11 +47,14 @@ export default async function LandingPage() {
       {/* 3. Footer with Required Links */}
       <footer className="py-6 text-center text-sm text-slate-500">
         <div className="space-x-6">
-          <Link href="/terms" className="hover:underline hover:text-slate-700">
+          <Link
+            href="/legal/terms"
+            className="hover:underline hover:text-slate-700"
+          >
             Terms of Service
           </Link>
           <Link
-            href="/privacy"
+            href="/legal/privacy"
             className="hover:underline hover:text-slate-700"
           >
             Privacy Policy
