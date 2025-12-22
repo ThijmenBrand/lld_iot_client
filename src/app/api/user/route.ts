@@ -2,7 +2,7 @@ import { db } from "@/src/utils/firebase.admin";
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 import { authOptions } from "../auth/[...nextauth]/route";
-import { UserResponse } from "@/src/types/User";
+import { User, UserResponse } from "@/src/types/User";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -19,12 +19,14 @@ export async function GET() {
       return NextResponse.json<UserResponse>({
         deviceId: "",
         calendarId: defaultCalendarId,
+        widgetType: "calendar",
       });
     }
 
     return NextResponse.json<UserResponse>({
       deviceId: userDoc.data()?.deviceId || "",
       calendarId: userDoc.data()?.calendarId || defaultCalendarId,
+      widgetType: userDoc.data()?.widgetType || "calendar",
     });
   } catch (error) {
     console.error("Error fetching user data:", error);
@@ -39,8 +41,8 @@ export async function POST(request: Request) {
     return new NextResponse("Unauthorized", { status: 401 });
   }
 
-  const body = await request.json();
-  const { deviceId, calendarId } = body;
+  const body = (await request.json()) as User;
+  const { deviceId, calendarId, widgetType } = body;
 
   if (!deviceIdUnique(deviceId, session.user.id)) {
     return new NextResponse("Device ID already in use", { status: 400 });
@@ -54,6 +56,7 @@ export async function POST(request: Request) {
         {
           deviceId: deviceId || "",
           calendarId: calendarId || "primary",
+          widgetType: widgetType || "calendar",
           updatedAt: new Date().toISOString(),
         },
         { merge: true }

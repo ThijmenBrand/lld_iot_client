@@ -16,6 +16,21 @@ export async function getDbAuth(userId: string, provider: string) {
   return accountsSnap.docs[0].data();
 }
 
+export async function getOAuth(userId: string) {
+  const accountData = await getDbAuth(userId, "google");
+  if (!accountData) {
+    return null;
+  }
+
+  const refreshToken = accountData.refresh_token;
+
+  if (!refreshToken) {
+    return null;
+  }
+
+  return getGoogleOauth2(accountData.access_token, refreshToken);
+}
+
 export async function getGoogleOauth2(
   accessToken: string,
   refreshToken: string

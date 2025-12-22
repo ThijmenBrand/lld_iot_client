@@ -1,6 +1,7 @@
 "use client";
 
 import { Calendar } from "@/src/types/Calendar";
+import { User } from "@/src/types/User";
 import { useEffect, useState } from "react";
 
 interface DeviceFormProps {
@@ -13,6 +14,7 @@ export default function DeviceForm({ userId }: DeviceFormProps) {
   const [calendars, setCalendars] = useState<Calendar[]>([]);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<string>("");
+  const [activeWidget, setActiveWidget] = useState<string>("calendar");
 
   useEffect(() => {
     async function init() {
@@ -20,9 +22,11 @@ export default function DeviceForm({ userId }: DeviceFormProps) {
 
       const userRes = await fetch("/api/user");
       if (userRes.ok) {
-        const data = await userRes.json();
+        const data = (await userRes.json()) as User;
+        console.log("Fetched user data:", data);
         if (data.deviceId) setDeviceId(data.deviceId);
         if (data.calendarId) setCalendarId(data.calendarId);
+        if (data.widgetType) setActiveWidget(data.widgetType);
       }
     }
 
@@ -53,7 +57,11 @@ export default function DeviceForm({ userId }: DeviceFormProps) {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ deviceId: deviceId.trim(), calendarId }),
+        body: JSON.stringify({
+          deviceId: deviceId.trim(),
+          calendarId,
+          widgetType: activeWidget,
+        }),
       });
 
       if (res.ok) {
@@ -109,6 +117,36 @@ export default function DeviceForm({ userId }: DeviceFormProps) {
               </option>
             ))}
           </select>
+        </div>
+
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Active Widget
+          </label>
+          <div className="flex gap-4">
+            <button
+              type="button"
+              onClick={() => setActiveWidget("calendar")}
+              className={`px-4 py-2 rounded border ${
+                activeWidget === "calendar"
+                  ? "bg-slate-900 text-white"
+                  : "bg-white"
+              }`}
+            >
+              📅 Calendar
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveWidget("countdown")}
+              className={`px-4 py-2 rounded border ${
+                activeWidget === "countdown"
+                  ? "bg-slate-900 text-white"
+                  : "bg-white"
+              }`}
+            >
+              ⏰ Countdown
+            </button>
+          </div>
         </div>
 
         <div>

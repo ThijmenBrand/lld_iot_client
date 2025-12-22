@@ -1,7 +1,7 @@
 import { db } from "@/src/utils/firebase.admin";
-import { NextRequest, NextResponse } from "next/server";
-import { google } from "googleapis";
-import { getDbAuth, getGoogleOauth2 } from "@/src/utils/auth";
+import { NextRequest } from "next/server";
+import { User } from "@/src/types/User";
+import { selectWidget } from "./widgets";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +15,7 @@ export async function GET(request: NextRequest) {
 
   console.log(`Checking device: ${deviceId}`);
 
+  // Find user by deviceId
   const userSnap = await db
     .collection("users")
     .where("deviceId", "==", deviceId)
@@ -26,71 +27,21 @@ export async function GET(request: NextRequest) {
     return new Response("Device not found", { status: 404 });
   }
 
-  const userData = userSnap.docs[0].data();
+  const userData = userSnap.docs[0].data() as User;
   const userId = userSnap.docs[0].id;
   console.log(`Device ID ${deviceId} is registered to user ID: ${userId}`);
 
-  const accountData = await getDbAuth(userId, "google");
-  if (!accountData) {
-    console.log(`No linked Google account for user ID: ${userId}`);
-    return new Response("No linked Google account", { status: 404 });
-  }
+  console.log(`Selecting widget: ${userData.widgetType}`);
 
-  const refreshToken = accountData.refresh_token;
+  const data = await selectWidget(userData.widgetType || "calendar", {
+    ...userData,
+    id: userId,
+  });
 
-  if (!refreshToken) {
-    console.log(`No refresh token found for user ID: ${userId}`);
-    return new Response("No refresh token found", { status: 404 });
-  }
+  const payload = {
+    widget: userData.widgetType || "calendar",
+    data: data,
+  };
 
-  const oauth2Client = await getGoogleOauth2(
-    accountData.access_token,
-    refreshToken
-  );
-
-  const targetCalendarId = userData.calendarId || "primary";
-
-  try {
-    const calendar = google.calendar({ version: "v3", auth: oauth2Client });
-
-    const response = await calendar.events.list({
-      calendarId: targetCalendarId,
-      timeMin: new Date().toISOString(),
-      maxResults: 3,
-      singleEvents: true,
-      orderBy: "startTime",
-    });
-
-    const events = response.data.items || [];
-    console.log(`Fetched ${events.length} events for device ID: ${deviceId}`);
-
-    const lines = events.map((event) => {
-      const start = event.start?.dateTime || event.start?.date || "";
-      const summary = event.summary || "No Title";
-
-      const dateObj = new Date(start);
-
-      const timeStr = dateObj.toLocaleDateString("nl-NL", {
-        day: "numeric",
-        month: "short",
-        timeZone: "Europe/Amsterdam",
-      });
-
-      return `${timeStr} ${summary}`;
-    });
-
-    if (lines.length === 0) {
-      lines.push("No upcoming events.");
-    }
-
-    const payload = lines.join("|");
-
-    return new NextResponse(payload, {
-      status: 200,
-      headers: { "Content-Type": "text/plain" },
-    });
-  } catch (error) {
-    console.error("Error fetching calendar events:", error);
-    return new NextResponse("Error fetching calendar events", { status: 500 });
-  }
+  return new Response(JSON.stringify(payload), { status: 200 });
 }
