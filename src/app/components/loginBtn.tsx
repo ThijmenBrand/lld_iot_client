@@ -7,7 +7,6 @@ interface LoginBtnProps {
 }
 
 export default function AuthBtn({ isLoggedIn }: LoginBtnProps) {
-  console.log("LoginBtn isLoggedIn:", isLoggedIn);
   if (isLoggedIn) {
     return <LogoutBtn />;
   }
