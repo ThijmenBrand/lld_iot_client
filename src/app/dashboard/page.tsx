@@ -16,9 +16,9 @@ export default async function HomePage() {
   return (
     <main className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4">
       <div className="text-center mb-8">
-        <h1 className="text-4xl font-bold text-slate-900 mb-2">Ink Calendar</h1>
+        <h1 className="text-4xl font-bold text-slate-900 mb-2">Baby nyuszi</h1>
         <p className="text-gray-600">
-          Connect your E-Ink display to Google Calendar
+          Configure your baby nyuszi device settings below.
         </p>
       </div>
       <div className="flex flex-col items-center w-full">
