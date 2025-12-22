@@ -20,11 +20,12 @@ export const authOptions: NextAuthOptions = {
   ],
   adapter: FirestoreAdapter(db),
   callbacks: {
-    async session({ session, user }) {
-      if (session.user && user) {
-        session.user.id = user.id;
+    async session({ session, token, user }) {
+      if (session.user) {
+        // 1. If using JWT (strategy: "jwt"), the ID is in 'token.sub'
+        // 2. If using Database (strategy: "database"), the ID is in 'user.id'
+        session.user.id = token?.sub || user?.id || session.user.id;
       }
-
       return session;
     },
     async redirect({ url, baseUrl }) {

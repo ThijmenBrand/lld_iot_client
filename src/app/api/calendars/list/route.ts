@@ -37,6 +37,8 @@ export async function GET() {
         timezone: calendar.timeZone || "UTC",
       })) || [];
 
+    console.log("Fetched calendars:", calendars);
+
     return NextResponse.json(calendars);
   } catch (error) {
     console.error("Error fetching calendars:", error);
