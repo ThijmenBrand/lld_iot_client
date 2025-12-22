@@ -1,8 +1,6 @@
 "use client";
 
 import { Calendar } from "@/src/types/Calendar";
-import { db } from "@/src/utils/firebase.browser";
-import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { useEffect, useState } from "react";
 
 interface DeviceFormProps {
@@ -17,33 +15,28 @@ export default function DeviceForm({ userId }: DeviceFormProps) {
   const [status, setStatus] = useState<string>("");
 
   useEffect(() => {
-    async function loadData() {
+    async function init() {
       if (!userId) return;
 
-      const userRef = doc(db, "users", userId);
-      const snap = await getDoc(userRef);
-      if (snap.exists() && snap.data().deviceId) {
-        const data = snap.data();
+      const userRes = await fetch("/api/user");
+      if (userRes.ok) {
+        const data = await userRes.json();
         if (data.deviceId) setDeviceId(data.deviceId);
         if (data.calendarId) setCalendarId(data.calendarId);
       }
     }
 
-    loadData();
+    init();
   }, [userId]);
 
   useEffect(() => {
     async function fetchCalendars() {
       if (!userId) return;
 
-      try {
-        const res = await fetch("api/calendars/list");
-        if (res.ok) {
-          const data = await res.json();
-          setCalendars(data || []);
-        }
-      } catch (error) {
-        console.error("Error fetching calendars:", error);
+      const calRes = await fetch("/api/calendars/list");
+      if (calRes.ok) {
+        const list = await calRes.json();
+        setCalendars(list);
       }
     }
 
@@ -55,17 +48,25 @@ export default function DeviceForm({ userId }: DeviceFormProps) {
     setStatus("Saving...");
 
     try {
-      const userRef = doc(db, "users", userId);
-      await updateDoc(userRef, {
-        deviceId: deviceId.trim(),
-        calendarId: calendarId,
+      const res = await fetch("/api/user", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ deviceId: deviceId.trim(), calendarId }),
       });
-      setStatus("Device ID saved successfully!");
+
+      if (res.ok) {
+        setStatus("Saved successfully! ✅");
+      } else {
+        setStatus("Error saving. ❌");
+      }
     } catch (error) {
-      console.error("Error saving device ID: ", error);
-      setStatus("Failed to save Device ID.");
+      console.error("Error saving user data:", error);
+      setStatus("Error saving. ❌");
     } finally {
       setLoading(false);
+      setTimeout(() => setStatus(""), 3000);
     }
   };
 
