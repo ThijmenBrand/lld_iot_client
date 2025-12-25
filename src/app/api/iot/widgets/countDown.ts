@@ -29,19 +29,45 @@ export async function getCountdownData(user: User) {
 
     const event = events[0];
     const target = event.start?.dateTime || event.start?.date || "";
-    const start = event.created || "";
     const summary = event.summary || "No Title";
 
     const now = new Date();
-    const eventTarget = new Date(target);
-    const eventCreated = new Date(start);
+    const msPerDay = 1000 * 60 * 60 * 24;
 
-    const diffTime = eventTarget.getTime() - now.getTime();
-    const daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    let eventDay: Date;
+    if (event.start?.date) {
+      const [year, month, day] = event.start.date.split("-").map(Number);
+      eventDay = new Date(year, month - 1, day);
+    } else {
+      const et = new Date(target);
+      eventDay = new Date(et.getFullYear(), et.getMonth(), et.getDate());
+    }
 
-    const totalDuration = eventTarget.getTime() - eventCreated.getTime();
-    const elapsedDuration = now.getTime() - eventCreated.getTime();
-    let progress = Math.round((elapsedDuration / totalDuration) * 100);
+    const created = event.created ? new Date(event.created) : new Date();
+    const createdDay = new Date(
+      created.getFullYear(),
+      created.getMonth(),
+      created.getDate()
+    );
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    const daysLeft = Math.round(
+      (eventDay.getTime() - today.getTime()) / msPerDay
+    );
+
+    const totalDays = Math.round(
+      (eventDay.getTime() - createdDay.getTime()) / msPerDay
+    );
+    const elapsedDays = Math.round(
+      (today.getTime() - createdDay.getTime()) / msPerDay
+    );
+
+    let progress: number;
+    if (totalDays <= 0) {
+      progress = today.getTime() >= eventDay.getTime() ? 100 : 0;
+    } else {
+      progress = Math.round((elapsedDays / totalDays) * 100);
+    }
 
     if (progress < 0) progress = 0;
     if (progress > 100) progress = 100;
@@ -49,8 +75,8 @@ export async function getCountdownData(user: User) {
     const daysLeftString = daysLeft > 1 ? "days" : "day";
 
     return {
-      daysLeft: daysLeft > 0 ? `${daysLeft} ${daysLeftString}` : "ARRIVED",
-      dateString: eventTarget.toLocaleDateString("nl-NL", {
+      daysLeft: daysLeft > 0 ? `${daysLeft} ${daysLeftString}` : "Today!!",
+      dateString: eventDay.toLocaleDateString("nl-NL", {
         month: "short",
         day: "numeric",
         year: "numeric",
