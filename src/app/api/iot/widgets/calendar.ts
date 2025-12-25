@@ -26,15 +26,37 @@ export async function getCalendarData(user: User) {
       return "No events.";
     }
 
-    const first = items[0];
-    const highlight = {
-      time: formatTimeRange(first),
-      title: (first.summary || "No Title").substring(0, 25),
-    };
+    const firstEvent = items[0];
+    const firstEventDate = new Date(
+      firstEvent.start?.dateTime || firstEvent.start?.date || ""
+    );
+    const now = new Date();
 
-    const upcoming = items.slice(1).map((event) => ({
+    const isToday = firstEventDate.toDateString() === now.toDateString();
+
+    let highlight;
+    let upcomingItems;
+
+    if (isToday) {
+      highlight = {
+        type: "event",
+        time: formatTimeRange(firstEvent),
+        title: (firstEvent.summary || "No Title").substring(0, 25),
+      };
+      upcomingItems = items.slice(1);
+    } else {
+      highlight = {
+        type: "empty",
+        message: "No events",
+        subMessage: "Relax & Enjoy",
+      };
+      upcomingItems = items;
+    }
+
+    // Format the upcoming list (Limit to 3 items)
+    const upcoming = upcomingItems.slice(0, 3).map((event) => ({
       time: formatUpcomingTime(event),
-      title: (event.summary || "No Title").substring(0, 25),
+      title: (event.summary || "No Title").substring(0, 18),
     }));
 
     return {
