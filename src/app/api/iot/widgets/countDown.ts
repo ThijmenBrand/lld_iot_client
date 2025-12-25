@@ -46,8 +46,10 @@ export async function getCountdownData(user: User) {
     if (progress < 0) progress = 0;
     if (progress > 100) progress = 100;
 
+    const daysLeftString = daysLeft > 1 ? "days" : "day";
+
     return {
-      daysLeft: daysLeft > 0 ? `T-${daysLeft}` : "ARRIVED",
+      daysLeft: daysLeft > 0 ? `${daysLeft} ${daysLeftString}` : "ARRIVED",
       dateString: eventTarget.toLocaleDateString("nl-NL", {
         month: "short",
         day: "numeric",
