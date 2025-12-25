@@ -28,31 +28,34 @@ export async function getCountdownData(user: User) {
     }
 
     const event = events[0];
-    const start = event.start?.dateTime || event.start?.date || "";
+    const target = event.start?.dateTime || event.start?.date || "";
+    const start = event.created || "";
     const summary = event.summary || "No Title";
 
-    const eventDate = new Date(start);
     const now = new Date();
-    const diffMs = eventDate.getTime() - now.getTime();
+    const eventTarget = new Date(target);
+    const eventCreated = new Date(start);
 
-    if (diffMs <= 0) {
-      return `Event "${summary}" is happening now or has already occurred.`;
-    }
+    const diffTime = eventTarget.getTime() - now.getTime();
+    const daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-    const diffHours = Math.floor((diffMs / (1000 * 60 * 60)) % 24);
-    const diffMinutes = Math.floor((diffMs / (1000 * 60)) % 60);
+    const totalDuration = eventTarget.getTime() - eventCreated.getTime();
+    const elapsedDuration = now.getTime() - eventCreated.getTime();
+    let progress = Math.round((elapsedDuration / totalDuration) * 100);
 
-    let countdownStr = `${summary} is in: `;
-    if (diffDays > 0) {
-      countdownStr += `${diffDays}d `;
-    }
-    if (diffHours > 0 || diffDays > 0) {
-      countdownStr += `${diffHours}h `;
-    }
-    countdownStr += `${diffMinutes}m`;
+    if (progress < 0) progress = 0;
+    if (progress > 100) progress = 100;
 
-    return countdownStr;
+    return {
+      daysLeft: daysLeft > 0 ? `T-${daysLeft}` : "ARRIVED",
+      dateString: eventTarget.toLocaleDateString("nl-NL", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      }),
+      label: summary || "Countdown",
+      progress: progress,
+    };
   } catch (error) {
     console.error("Error fetching calendar data:", error);
     throw error;
