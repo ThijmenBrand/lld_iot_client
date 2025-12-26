@@ -9,13 +9,33 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const deviceId = searchParams.get("deviceId");
 
-  if (!deviceId) {
-    return new Response("Missing deviceId parameter", { status: 400 });
+  const providedSecret = request.headers.get("X-NYUSZI-SECRET");
+
+  if (!deviceId) return new Response("Missing deviceId", { status: 400 });
+  if (!providedSecret) return new Response("Unauthorized", { status: 401 });
+
+  const user = await validateDevice(deviceId, providedSecret);
+  if (!user) {
+    console.log(`Unauthorized access attempt for device ID: ${deviceId}`);
+    return new Response("Unauthorized", { status: 401 });
   }
 
-  console.log(`Checking device: ${deviceId}`);
+  const widgetType = user.widgetType || "calendar";
 
-  // Find user by deviceId
+  const data = await selectWidget(widgetType, user);
+
+  const payload = {
+    widget: widgetType,
+    data: data,
+  };
+
+  return new Response(JSON.stringify(payload), { status: 200 });
+}
+
+async function validateDevice(
+  deviceId: string,
+  secret: string
+): Promise<User | null> {
   const userSnap = await db
     .collection("users")
     .where("deviceId", "==", deviceId)
@@ -23,25 +43,16 @@ export async function GET(request: NextRequest) {
     .get();
 
   if (userSnap.empty) {
-    console.log(`Device ID ${deviceId} not found.`);
-    return new Response("Device not found", { status: 404 });
+    return null;
   }
 
-  const userData = userSnap.docs[0].data() as User;
-  const userId = userSnap.docs[0].id;
-  console.log(`Device ID ${deviceId} is registered to user ID: ${userId}`);
+  const userDoc = userSnap.docs[0];
+  const userData = userDoc.data() as User;
+  const userId = userDoc.id;
 
-  console.log(`Selecting widget: ${userData.widgetType}`);
+  if (userData.deviceSecret !== secret) {
+    return null;
+  }
 
-  const data = await selectWidget(userData.widgetType || "calendar", {
-    ...userData,
-    id: userId,
-  });
-
-  const payload = {
-    widget: userData.widgetType || "calendar",
-    data: data,
-  };
-
-  return new Response(JSON.stringify(payload), { status: 200 });
+  return { ...userData, id: userId };
 }

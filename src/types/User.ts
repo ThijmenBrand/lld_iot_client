@@ -7,6 +7,7 @@ export interface UserResponse {
 export interface User {
   id: string;
   deviceId: string;
+  deviceSecret: string;
   calendarId?: string;
   widgetType?: string;
 }
