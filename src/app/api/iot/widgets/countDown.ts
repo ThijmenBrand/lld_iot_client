@@ -29,7 +29,7 @@ export async function getCountdownData(user: User) {
 
     const event = events[0];
     const target = event.start?.dateTime || event.start?.date || "";
-    const summary = event.summary || "No Title";
+    const title = (event.summary || "No Title").trim().slice(0, 20);
 
     const now = new Date();
     const msPerDay = 1000 * 60 * 60 * 24;
@@ -81,7 +81,7 @@ export async function getCountdownData(user: User) {
         day: "numeric",
         year: "numeric",
       }),
-      label: summary || "Countdown",
+      label: title,
       progress: progress,
     };
   } catch (error) {
