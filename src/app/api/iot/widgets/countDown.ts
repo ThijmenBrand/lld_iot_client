@@ -27,7 +27,7 @@ export async function getCountdownData(user: User) {
       return {
         daysLeft: "--",
         dateString: "",
-        label: "Enjoy your day!",
+        label: "There is nothing planned :(",
         progress: 0,
       };
     }
