@@ -25,7 +25,7 @@ export async function getCountdownData(user: User) {
     const events = response.data.items || [];
     if (events.length === 0) {
       return {
-        daysLeft: "Nothing planned :(",
+        daysLeft: "--",
         dateString: "",
         label: "Enjoy your day!",
         progress: 0,
