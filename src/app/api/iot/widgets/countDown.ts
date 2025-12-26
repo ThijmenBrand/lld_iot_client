@@ -29,7 +29,6 @@ export async function getCountdownData(user: User) {
 
     const event = events[0];
     const target = event.start?.dateTime || event.start?.date || "";
-    const title = (event.summary || "No Title").trim().slice(0, 20);
 
     const now = new Date();
     const msPerDay = 1000 * 60 * 60 * 24;
@@ -81,11 +80,20 @@ export async function getCountdownData(user: User) {
         day: "numeric",
         year: "numeric",
       }),
-      label: title,
+      label: formatTitle(event.summary),
       progress: progress,
     };
   } catch (error) {
     console.error("Error fetching calendar data:", error);
     throw error;
   }
+}
+
+function formatTitle(title: string | null | undefined): string {
+  if (!title) return "Countdown";
+
+  if (title.length > 20) {
+    return title.slice(0, 17) + "...";
+  }
+  return title;
 }
