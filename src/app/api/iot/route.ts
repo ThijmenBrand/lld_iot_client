@@ -50,16 +50,15 @@ async function validateDevice(
     return null;
   }
 
-  console.log(`Found user for device ID: ${deviceId}`);
-  console.debug(userSnap.docs[0].data());
+  console.debug(`Device ID: ${deviceId} found in database.`);
+  console.debug(`Comparing provided secret with stored secret.`);
 
   const userDoc = userSnap.docs[0];
   const userData = userDoc.data() as User;
   const userId = userDoc.id;
 
-  console.debug(`Validating secret for user ID: ${userId}`);
-  console.debug(`Provided secret: ${secret}`);
   console.debug(`Stored secret: ${userData.deviceSecret}`);
+  console.debug(`Provided secret: ${secret}`);
 
   if (userData.deviceSecret !== secret) {
     return null;
