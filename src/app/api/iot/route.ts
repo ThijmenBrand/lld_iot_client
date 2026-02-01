@@ -14,6 +14,8 @@ export async function GET(request: NextRequest) {
   if (!deviceId) return new Response("Missing deviceId", { status: 400 });
   if (!providedSecret) return new Response("Unauthorized", { status: 401 });
 
+  console.log(`Device ID: ${deviceId} is attempting to access data.`);
+
   const user = await validateDevice(deviceId, providedSecret);
   if (!user) {
     console.log(`Unauthorized access attempt for device ID: ${deviceId}`);
@@ -34,7 +36,7 @@ export async function GET(request: NextRequest) {
 
 async function validateDevice(
   deviceId: string,
-  secret: string
+  secret: string,
 ): Promise<User | null> {
   const userSnap = await db
     .collection("users")
@@ -46,9 +48,16 @@ async function validateDevice(
     return null;
   }
 
+  console.log(`Found user for device ID: ${deviceId}`);
+  console.debug(userSnap.docs[0].data());
+
   const userDoc = userSnap.docs[0];
   const userData = userDoc.data() as User;
   const userId = userDoc.id;
+
+  console.debug(`Validating secret for user ID: ${userId}`);
+  console.debug(`Provided secret: ${secret}`);
+  console.debug(`Stored secret: ${userData.deviceSecret}`);
 
   if (userData.deviceSecret !== secret) {
     return null;
