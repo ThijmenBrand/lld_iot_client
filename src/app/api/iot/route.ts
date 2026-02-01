@@ -38,6 +38,8 @@ async function validateDevice(
   deviceId: string,
   secret: string,
 ): Promise<User | null> {
+  console.debug(`Validating device ID: ${deviceId}`);
+
   const userSnap = await db
     .collection("users")
     .where("deviceId", "==", deviceId)
